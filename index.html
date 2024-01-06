@@ -1,1 +1,105 @@
-构建成功<a href="/api/index.php">点击这里查看phpinfo</a>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网站信息查询</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        #search-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        #result-container {
+            text-align: left;
+            max-width: 400px;
+        }
+        #result-container p {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="search-container">
+    <label for="webNumber">输入网站号：</label>
+    <input type="text" id="webNumber">
+    <button onclick="searchWebsite()">查询</button>
+</div>
+
+<div id="result-container"></div>
+
+<script>
+    // 获取 URL 参数的函数
+    function getURLParameter(name) {
+        return (new URLSearchParams(window.location.search)).get(name);
+    }
+
+    // 设置搜索框的值
+    var fillInFirstValue = getURLParameter('fillinfirst');
+    if (fillInFirstValue) {
+        document.getElementById('webNumber').value = fillInFirstValue;
+    }
+
+    function searchWebsite() {
+        // 获取输入的网站号
+        var webNumber = document.getElementById('webNumber').value;
+
+        // 发送查询请求
+        fetch('api.php?webNumber=' + encodeURIComponent(webNumber))
+            .then(response => response.json())
+            .then(data => displayResult(data))
+            .catch(error => console.error('Error:', error));
+    }
+
+    function displayResult(result) {
+        var resultContainer = document.getElementById('result-container');
+        resultContainer.innerHTML = ''; // 清空之前的结果
+
+        // 如果有结果，则显示在页面上
+        if (result && Object.keys(result).length > 0) {
+            for (var key in result) {
+                var paragraph = document.createElement('p');
+                var label = key.replace(/web-/, ''); // 移除键名前缀
+
+                // 添加超链接样式
+                if (label === 'homepage') {
+                    var link = document.createElement('a');
+                    link.href = result[key];
+                    link.textContent = result[key];
+                    paragraph.innerHTML = '<strong>' + beautifyKey(label) + ':</strong> ';
+                    paragraph.appendChild(link);
+                } else {
+                    paragraph.innerHTML = '<strong>' + beautifyKey(label) + ':</strong> ' + result[key];
+                }
+                
+                resultContainer.appendChild(paragraph);
+            }
+        } else {
+            resultContainer.innerHTML = '未找到匹配的网站信息';
+        }
+    }
+
+    // 优化键名显示
+    function beautifyKey(key) {
+        // 可以根据需要自定义键名的美化方式
+        var beautifiedKeys = {
+            'name': '网站名称',
+            'domain': '网站域名',
+            'homepage': '网站首页',
+            'owner': '拥有人',
+            'number': '网站号'
+        };
+        return beautifiedKeys[key] || key;
+    }
+</script>
+
+</body>
+</html>
